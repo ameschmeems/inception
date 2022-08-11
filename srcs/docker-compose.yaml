@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+
+  mariadb:
+    build: ./requirements/mariadb
+    image: mariadb:kpucylo
+    container_name: database
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+    volumes:
+      - data:/var/lib/mysql
+    restart: always
+    networks:
+      - inception
+
+  wordpress:
+    build: ./requirements/wordpress
+    image: wordpress:kpucylo
+    container_name: wordpress
+    volumes:
+      - server:/var/www/html
+    restart: always
+    networks:
+      - inception
+    depends_on:
+      - mariadb
+
+  nginx:
+    build: ./requirements/nginx
+    image: nginx:kpucylo
+    container_name: server
+    volumes:
+      - server:/var/www/html
+    restart: always
+    networks:
+      - inception
+    depends_on:
+      - wordpress
+    ports:
+      - 443:443
+
+networks:
+  inception:
+    name: inception
+
+volumes:
+  data:
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/kpucylo/data/mysql
+  server:
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/kpucylo/data/wordpress
